@@ -8,6 +8,7 @@ export default defineConfig({
   },
   engine: "classic",
   datasource: {
-    url: env("DATABASE_URL"),
+    // Use DIRECT_URL for migrations (direct DB connection). If not set, fallback to DATABASE_URL.
+    url: env("DIRECT_URL") || env("DATABASE_URL"),
   },
 });
