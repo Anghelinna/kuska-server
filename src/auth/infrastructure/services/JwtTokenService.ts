@@ -21,8 +21,8 @@ export class JwtTokenService {
     };
 
     return jwt.sign(payload, this.accessTokenSecret, {
-      expiresIn: this.accessTokenExpiresIn,
-    });
+      expiresIn: this.accessTokenExpiresIn as string | number,
+    } as jwt.SignOptions);
   }
 
   generateRefreshToken(userId: string): string {
@@ -31,8 +31,8 @@ export class JwtTokenService {
     };
 
     return jwt.sign(payload, this.refreshTokenSecret, {
-      expiresIn: this.refreshTokenExpiresIn,
-    });
+      expiresIn: this.refreshTokenExpiresIn as string | number,
+    } as jwt.SignOptions);
   }
 
   verifyAccessToken(token: string): TokenPayload {
