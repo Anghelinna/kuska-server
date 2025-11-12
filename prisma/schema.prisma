@@ -35,6 +35,9 @@ model User {
   projectsCreated  Project[]        @relation("ProjectCreator")
   projectMembers   ProjectMember[]
 
+  templatesCreated  Template[]        @relation("TemplateCreator")
+  templateVersions  TemplateVersion[]
+
   @@map("users")
 }
 
@@ -105,6 +108,10 @@ model Project {
   createdBy User            @relation("ProjectCreator", fields: [createdById], references: [id], onDelete: Cascade)
   members   ProjectMember[]
 
+  templateId  String?
+  template    Template? @relation("ProjectTemplate", fields: [templateId], references: [id], onDelete: SetNull)
+
+
   @@map("projects")
 }
 
@@ -122,3 +129,55 @@ model ProjectMember {
   @@unique([projectId, userId])
   @@map("project_members")
 }
+
+// ============================================
+// Templates Module Models - MANTENIENDO TemplateType
+// ============================================
+
+
+enum TemplateComplexity {
+  SIMPLE
+  MEDIUM
+  COMPLEX
+}
+
+model Template {
+  id          String              @id @default(uuid())
+  name        String              @unique
+  description String?
+  category    String?             // 'software', 'marketing', etc.
+  industry    String?             // 'tech', 'retail', etc.
+  complexity  TemplateComplexity  @default(MEDIUM)
+  content     Json                // Estructura de fases, tareas, etc.
+  isPublic    Boolean             @default(false)
+  usageCount  Int                 @default(0)
+  rating      Decimal?            @db.Decimal(3, 2) // 0.00 - 5.00
+  createdById String
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+
+  // Relations
+  createdBy   User                @relation("TemplateCreator", fields: [createdById], references: [id], onDelete: Cascade)
+  versions    TemplateVersion[]
+  projects    Project[]           @relation("ProjectTemplate")
+
+  @@map("templates")
+}
+
+model TemplateVersion {
+  id           String   @id @default(uuid())
+  templateId   String
+  versionNumber Int
+  content      Json
+  notes        String?
+  createdById  String
+  createdAt    DateTime @default(now())
+
+  // Relations
+  template     Template @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  createdBy    User     @relation(fields: [createdById], references: [id])
+
+  @@unique([templateId, versionNumber])
+  @@map("template_versions")
+}
+
