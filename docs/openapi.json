@@ -125,6 +125,51 @@
           "createdAt": { "type": "string", "format": "date-time" },
           "updatedAt": { "type": "string", "format": "date-time" }
         }
+      },
+      "CreateTemplate": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string", "minLength": 1, "maxLength": 255 },
+          "description": { "type": "string", "maxLength": 1000 },
+          "category": { "type": "string", "maxLength": 100 },
+          "industry": { "type": "string", "maxLength": 100 },
+          "complexity": { "type": "string", "enum": ["SIMPLE", "MEDIUM", "COMPLEX"], "default": "MEDIUM" },
+          "content": { "type": "object", "additionalProperties": true },
+          "isPublic": { "type": "boolean", "default": false }
+        },
+        "required": ["name", "content"]
+      },
+      "UpdateTemplate": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string", "minLength": 1, "maxLength": 255 },
+          "description": { "type": "string", "maxLength": 1000 },
+          "category": { "type": "string", "maxLength": 100 },
+          "industry": { "type": "string", "maxLength": 100 },
+          "complexity": { "type": "string", "enum": ["SIMPLE", "MEDIUM", "COMPLEX"] },
+          "content": { "type": "object", "additionalProperties": true },
+          "isPublic": { "type": "boolean" }
+        }
+      },
+      "TemplateResponse": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "name": { "type": "string" },
+          "description": { "type": "string" },
+          "category": { "type": "string" },
+          "industry": { "type": "string" },
+          "complexity": { "type": "string" },
+          "content": { "type": "object", "additionalProperties": true },
+          "isPublic": { "type": "boolean" },
+          "usageCount": { "type": "integer" },
+          "rating": { "type": "number" },
+          "createdById": { "type": "string" },
+          "createdByEmail": { "type": "string" },
+          "createdByName": { "type": "string" },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "updatedAt": { "type": "string", "format": "date-time" }
+        }
       }
     }
   },
@@ -496,6 +541,179 @@
           },
           "403": { "description": "Insufficient permissions (only admins)" },
           "404": { "description": "Member or project not found" }
+        }
+      }
+    },
+    "/api/templates": {
+      "get": {
+        "summary": "List templates (own + public)",
+        "tags": ["Templates"],
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "includePublic",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "boolean", "default": true },
+            "description": "Include public templates in the list"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Templates list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "data": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/TemplateResponse" }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": { "description": "Unauthorized" }
+        }
+      },
+      "post": {
+        "summary": "Create a new template",
+        "tags": ["Templates"],
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CreateTemplate" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Template created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "message": { "type": "string" },
+                    "data": { "$ref": "#/components/schemas/TemplateResponse" }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "description": "Validation error" },
+          "401": { "description": "Unauthorized" }
+        }
+      }
+    },
+    "/api/templates/{templateId}": {
+      "get": {
+        "summary": "Get template details",
+        "tags": ["Templates"],
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "templateId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Template details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "data": { "$ref": "#/components/schemas/TemplateResponse" }
+                  }
+                }
+              }
+            }
+          },
+          "403": { "description": "Template is private and user is not the owner" },
+          "404": { "description": "Template not found" }
+        }
+      },
+      "patch": {
+        "summary": "Update template (only creator)",
+        "tags": ["Templates"],
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "templateId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/UpdateTemplate" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Template updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "message": { "type": "string" },
+                    "data": { "$ref": "#/components/schemas/TemplateResponse" }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "description": "Validation error" },
+          "403": { "description": "Only the creator can update this template" },
+          "404": { "description": "Template not found" }
+        }
+      },
+      "delete": {
+        "summary": "Delete template (only creator)",
+        "tags": ["Templates"],
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "templateId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Template deleted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "message": { "type": "string" }
+                  }
+                }
+              }
+            }
+          },
+          "403": { "description": "Only the creator can delete this template" },
+          "404": { "description": "Template not found" }
         }
       }
     }
