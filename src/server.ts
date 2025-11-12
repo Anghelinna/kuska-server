@@ -12,6 +12,9 @@ import taskRoutes from './task/infrastructure/routes/taskRoutes';
 import teamRoutes from './tems/infrastructure/routes/teamRoutes';
 import { errorHandler } from './shared/infrastructure/middlewares/errorHandler';
 
+import templateRoutes from './templates/infrastructure/routes/templateRoutes';
+
+
 const app = express();
 
 // Middlewares globales
@@ -43,6 +46,9 @@ app.use('/api/auth', authRoutes);
 app.use('/api/projects', projectRoutes);
 app.use('/api/tasks', taskRoutes);
 app.use('/api/teams', teamRoutes);
+
+app.use('/api/templates', templateRoutes);
+
 
 // Swagger UI (OpenAPI)
 try {
