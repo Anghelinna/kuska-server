@@ -4,8 +4,7 @@ import { ITaskRepository } from '../../domain/repositories/ITaskRepository';
 
 export class PrismaTaskRepository implements ITaskRepository {
   async create(task: Task): Promise<Task> {
-    const db: any = prisma as any;
-    const prismaTask = await db.task.create({
+    const prismaTask = await prisma.tareas.create({
       data: {
         id: task.getId(),
         projectId: task.getProjectId(),
@@ -21,6 +20,7 @@ export class PrismaTaskRepository implements ITaskRepository {
         estimatedHours: task.getEstimatedHours() ?? undefined,
         spentHours: task.getSpentHours() ?? undefined,
         order: task.getOrder() ?? undefined,
+        updatedAt: task.getUpdatedAt(),
       },
     });
 
@@ -28,20 +28,17 @@ export class PrismaTaskRepository implements ITaskRepository {
   }
 
   async findById(id: string): Promise<Task | null> {
-    const db: any = prisma as any;
-    const prismaTask = await db.task.findUnique({ where: { id } });
+    const prismaTask = await prisma.tareas.findUnique({ where: { id } });
     return prismaTask ? this.toDomain(prismaTask) : null;
   }
 
   async findByProjectId(projectId: string): Promise<Task[]> {
-    const db: any = prisma as any;
-    const prismaTasks = await db.task.findMany({ where: { projectId }, orderBy: { createdAt: 'desc' } });
+    const prismaTasks = await prisma.tareas.findMany({ where: { projectId }, orderBy: { createdAt: 'desc' } });
     return prismaTasks.map((t) => this.toDomain(t));
   }
 
   async update(task: Task): Promise<Task> {
-    const db: any = prisma as any;
-    const prismaTask = await db.task.update({
+    const prismaTask = await prisma.tareas.update({
       where: { id: task.getId() },
       data: {
         title: task.getTitle(),
@@ -64,9 +61,8 @@ export class PrismaTaskRepository implements ITaskRepository {
   }
 
   async delete(id: string): Promise<void> {
-    const db: any = prisma as any;
-    // Soft delete: set deletedAt timestamp to preserve history (schema supports fecha_eliminacion)
-    await db.task.update({ where: { id }, data: { deletedAt: new Date() } });
+    // Soft delete: set deletedAt timestamp to preserve history
+    await prisma.tareas.update({ where: { id }, data: { deletedAt: new Date() } });
   }
 
   private toDomain(prismaTask: any): Task {
